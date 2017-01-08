@@ -1,3 +1,15 @@
+package controllers
+
+import play.api.mvc._
+import javax.inject.Inject
+import javax.inject.Singleton
+import play.Logger
+import play.api.data._
+import play.api.data.Forms._
+import play.api.i18n._
+import models._
+import services._
+
 @Singleton
 class ImageController @Inject() (
     val messagesApi: MessagesApi,
@@ -38,7 +50,7 @@ class ImageController @Inject() (
             image => {
                 if(image.productId == null || image.productId.getOrElse(0) == 0) {
                     Redirect(routes.ImageController.blank).flashing(
-                        "error" => "Product ID cannot be null!"
+                        "error" -> "Product ID cannot be null!"
                     )
                 } else {
                     if(image.url == null || "".equals(image.url)) image.url = "/assets/images/default_product.png"

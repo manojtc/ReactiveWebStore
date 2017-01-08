@@ -1,5 +1,15 @@
 package controllers
 
+import play.api.mvc._
+import javax.inject.Inject
+import javax.inject.Singleton
+import play.Logger
+import play.api.data._
+import play.api.data.Forms._
+import play.api.i18n._
+import models._
+import services._
+
 @Singleton
 class ReviewController @Inject() (
     val messagesApi: MessagesApi,
@@ -65,7 +75,7 @@ class ReviewController @Inject() (
             },
             review => {
                 service.update(id, review)
-                Redirect(routs.ReviewController.index).flashing(
+                Redirect(routes.ReviewController.index).flashing(
                     "success" -> Messages("success.update", review.productId)
                 )
             }
