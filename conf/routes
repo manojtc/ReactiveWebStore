@@ -24,3 +24,7 @@ POST /image/ controllers.ImageController.insert
 POST /image/:id controllers.ImageController.update(id:Long)
 POST /image:id/remove controllers.ImageController.remove(id:Long)
 GET /image/details/:id controllers.ImageController.details(id:Long)
+
+# Services
+GET /rx/prices controllers.RxController.prices
+GET /rx/aprices controllers.RxController.pricesAsync
