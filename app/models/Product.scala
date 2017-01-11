@@ -8,6 +8,6 @@ case class Product (
 ) {
     override def toString: String = {
         "Product { id: " + id.getOrElse(0) + ", name: " + name +
-        "details: " + details + ", price: " + price + "}"
+        ", details: " + details + ", price: " + price + "}"
     }
 }
