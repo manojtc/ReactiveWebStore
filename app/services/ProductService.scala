@@ -45,7 +45,7 @@ class ProductService extends IProductService {
 
     private def validateId(id: Long):Unit = {
         val entry = inMemoryDB.get(id)
-        if(entry == null) throw new RuntimeException("Could not find product: " + id)
+        if(entry == null || entry.equals(None)) throw new RuntimeException("Could not find product: " + id)
     }
 
     def findAllProducts():Seq[(String, String)] = {
