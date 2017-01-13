@@ -11,3 +11,7 @@ case class Product (
         ", details: " + details + ", price: " + price + "}"
     }
 }
+
+object ProductDef {
+    def toTable:String = "Product"
+}

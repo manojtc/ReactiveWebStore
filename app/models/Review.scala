@@ -12,3 +12,7 @@ case class Review (
         comment + "}"
     }
 }
+
+object ReviewDef {
+    def toTable:String = "Review"
+}
