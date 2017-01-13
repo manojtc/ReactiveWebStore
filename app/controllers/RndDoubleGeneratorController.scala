@@ -1,6 +1,7 @@
 package controllers
 
-import javax.inject.inject
+import javax.inject.Inject
+import javax.inject.Singleton
 import services._
 import models._
 import play.api.mvc._

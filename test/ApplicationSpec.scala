@@ -17,5 +17,18 @@ class ApplicationSpec extends PlaySpec with OneAppPerTest {
 
   }
 
+  "HomeController" should {
+      "render the index page" in {
+          val home = route(app, FakeRequest(GET, "/")).get
+          status(home) mustBe OK
+          contentType(home) mustBe Some("text/html")
+          contentAsString(home) must include ("Welcome to Reactive Web Store")
+      }
+  }
 
+  "RndController" should {
+      "return a random number" in {
+          contentAsString(route(app, FakeRequest(GET, "/rnd/rxbat")).get) mustBe "2.3000000000000007"
+      }
+  }
 }

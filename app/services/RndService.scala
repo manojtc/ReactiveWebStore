@@ -3,6 +3,14 @@ package services
 import scala.concurrent._
 import scala.concurrent.duration._
 import play.api.libs.ws.WSClient
+import rx.lang.scala.Observable
+import rx.lang.scala.schedulers.IOScheduler
+import rx.lang.scala.subjects.PublishSubject
+import rx.lang.scala.ImplicitFunctionConversions
+import javax.inject.Inject
+import javax.inject.Singleton
+import scala.util.{Success, Failure}
+import play.api.libs.json._
 
 trait IRndService {
     def next(): Double
