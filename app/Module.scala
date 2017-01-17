@@ -2,6 +2,7 @@ import com.google.inject.AbstractModule
 import java.time.Clock
 import services.{ApplicationTimer}
 import services._
+import dao._
 
 import services.{ApplicationTimer, AtomicCounter, Counter}
 
@@ -31,6 +32,10 @@ class Module extends AbstractModule {
     bind(classOf[IImageService]).to(classOf[ImageService]).asEagerSingleton()
     bind(classOf[IPriceService]).to(classOf[PriceService]).asEagerSingleton()
     bind(classOf[IRndService]).to(classOf[RndService]).asEagerSingleton()
+
+    bind(classOf[IProductDao]).to(classOf[ProductDao]).asEagerSingleton()
+    bind(classOf[IImageDao]).to(classOf[ImageDao]).asEagerSingleton()
+    bind(classOf[IReviewDao]).to(classOf[ReviewDao]).asEagerSingleton()
   }
 
 }

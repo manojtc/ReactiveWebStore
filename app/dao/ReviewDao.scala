@@ -1,5 +1,14 @@
 package dao
 
+import scala.concurrent.Future
+import javax.inject.Inject
+import play.api.db.slick.DatabaseConfigProvider
+import play.api.db.slick.HasDatabaseConfigProvider
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
+import slick.driver.JdbcProfile
+import slick.jdbc.GetResult
+import models.Review
+
 trait IReviewDao extends BaseDao[Review] {
     def findAll(): Future[Seq[Review]]
     def findById(id:Long): Future[Option[Review]]
@@ -11,7 +20,7 @@ trait IReviewDao extends BaseDao[Review] {
 class ReviewDao @Inject() (protected val dbConfigProvider: DatabaseConfigProvider) extends HasDatabaseConfigProvider[JdbcProfile] with IReviewDao {
     import driver.api._
     class ReviewTable(tag: Tag) extends Table[Review](tag, models.ReviewDef.toTable) {
-        def id = column[Option[Long]]("ID", 0.PrimaryKey)
+        def id = column[Option[Long]]("ID", O.PrimaryKey)
         def productId = column[Option[Long]]("PRODUCT_ID")
         def author = column[String]("AUTHOR")
         def comment = column[String]("COMMENT")
@@ -22,11 +31,11 @@ class ReviewDao @Inject() (protected val dbConfigProvider: DatabaseConfigProvide
     override def findAll(): Future[Seq[Review]] = db.run(Reviews.result)
     override def findById(id:Long): Future[Option[Review]] = db.run(Reviews.filter(_.id === id).result.headOption)
     override def remove(id:Long): Future[Int] = db.run(Reviews.filter(_.id === id).delete)
-    override def insert(p:Review): Future[Unit] = db.run(Reviews += r).map { _ => () }
+    override def insert(p:Review): Future[Unit] = db.run(Reviews += p).map { _ => () }
     override def update(p2:Review) = Future[Unit] {
         db.run(
-            Reviews.filter(_.id === id).
-                   .map(i => i.productId, i.author, i.comment))
+            Reviews.filter(_.id === p2.id)
+                   .map(i => (i.productId, i.author, i.comment))
                    .update((p2.productId, p2.author, p2.comment))
         )
     }

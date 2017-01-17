@@ -1,10 +1,12 @@
 import org.scalatestplus.play._
 import services._
 import models._
+import utils.Awaits
+import mocks.ProductMockedDao
 
 class ProductServiceTestSpec extends PlaySpec {
     "ProductService " must {
-        val service:IProductService = new ProductService
+        val service:IProductService = new ProductService(new ProductMockedDao)
         "insert a product properly" in {
             val product = new models.Product(Some(1), "Ball", "Awesome Basketball", 19.75)
             service.insert(product)
@@ -19,14 +21,14 @@ class ProductServiceTestSpec extends PlaySpec {
             }
         }
         "find the product 1" in {
-            val product = service.findById(1)
+            val product = Awaits.get(5, service.findById(1))
             product.get.id mustBe Some(1)
             product.get.name mustBe "Blue Ball"
             product.get.details mustBe "Awesome Blue Basketball"
             product.get.price mustBe 19.99
         }
         "find all" in {
-            val products = service.findAll()
+            val products = Awaits.get(5, service.findAll())
             products.get.length mustBe 1
             products.get(0).id mustBe Some(1)
             products.get(0).name mustBe "Blue Ball"
@@ -40,14 +42,14 @@ class ProductServiceTestSpec extends PlaySpec {
             products(0)._2 mustBe "Blue Ball"
         }
         "remove 1 product" in {
-            val product = service.remove(1)
-            product mustBe true
-            val oldProduct = service.findById(1)
+            val product = Awaits.get(5, service.remove(1))
+            product mustBe 1
+            val oldProduct = Awaits.get(5, service.findById(1))
             oldProduct mustBe None
         }
         "not remove because does not exist" in {
             intercept[RuntimeException] {
-                service.remove(-1)
+                Awaits.get(5, service.remove(-1))
             }
         }
     }

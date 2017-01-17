@@ -1,57 +1,50 @@
 package services
 
+import utils.Awaits
+import scala.concurrent.Future
+import javax.inject.Inject
+import javax.inject.Singleton
 import models.Product
-import javax.inject._
+import dao.IProductDao
+import dao.ProductDao
 
 trait IProductService extends BaseService[Product] {
-    def insert(product: Product): Long
-    def update(id: Long, product: Product): Boolean
-    def remove(id: Long): Boolean
-    def findById(id:Long): Option[Product]
-    def findAll():Option[List[Product]]
-    def findAllProducts():Seq[(String, String)]
+    def insert(product:Product): Future[Unit]
+    def update(id:Long, product:Product): Future[Unit]
+    def remove(id:Long): Future[Int]
+    def findById(id:Long): Future[Option[Product]]
+    def findAll(): Future[Option[Seq[Product]]]
+    def findAllProducts(): Seq[(String, String)]
 }
 
 @Singleton
-class ProductService extends IProductService {
-    def insert(product:Product):Long = {
-        val id = idCounter.incrementAndGet()
-        product.id = Some(id)
-        inMemoryDB.put(id, product)
-        id
-    }
+class ProductService @Inject() (dao:IProductDao) extends IProductService {
+    import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
-    def update(id: Long, product: Product): Boolean = {
-        validateId(id)
-        product.id = Some(id)
-        inMemoryDB.put(id, product)
-        true
+    def insert(product:Product): Future[Unit] = { dao.insert(product) }
+    def update(id:Long, product:Product): Future[Unit] = {
+        product.id = Option(id.toInt)
+        dao.update(product)
     }
-
-    def remove(id: Long): Boolean = {
-        validateId(id)
-        inMemoryDB.remove(id)
-        true
+    def remove(id:Long): Future[Int] = {
+        dao.remove(id)
     }
-
-    def findById(id:Long):Option[Product] = {
-        inMemoryDB.get(id)
+    def findById(id:Long): Future[Option[Product]] = {
+        dao.findById(id)
     }
-
-    def findAll():Option[List[Product]] = {
-        if(inMemoryDB.values == Nil || inMemoryDB.values.toList.size == 0) return None
-        Some(inMemoryDB.values.toList)
+    def findAll(): Future[Option[Seq[Product]]] = {
+        dao.findAll().map { x => Option(x) }
     }
-
-    private def validateId(id: Long):Unit = {
-        val entry = inMemoryDB.get(id)
-        if(entry == null || entry.equals(None)) throw new RuntimeException("Could not find product: " + id)
+    private def validateId(id:Long): Unit = {
+        val future = findById(id)
+        val entry = Awaits.get(5, future)
+        if(entry == null || entry.equals(None)) throw new RuntimeException("Could not find Product: " + id)
     }
-
-    def findAllProducts():Seq[(String, String)] = {
-        val products:Seq[(String, String)] = this
-            .findAll()
-            .getOrElse(List(Product(Some(0), "", "", 0)))
+    def findAllProducts(): Seq[(String, String)] = {
+        val future = this.findAll()
+        val result = Awaits.get(5, future)
+        val products:Seq[(String, String)] = result
+            .getOrElse(Seq(Product(Some(0), "", "", 0)))
             .toSeq
             .map { product => (product.id.get.toString, product.name) }
         return products

@@ -9,6 +9,7 @@ import play.api.data.Forms._
 import play.api.i18n._
 import models._
 import services._
+import utils.Awaits
 
 @Singleton
 class ProductController @Inject() (
@@ -25,7 +26,7 @@ class ProductController @Inject() (
     )
 
     def index = Action { implicit request =>
-        val products = service.findAll().getOrElse(Seq())
+        val products = Awaits.get(5, service.findAll()).getOrElse(Seq())
         Logger.info("index called. Products: " + products)
         Ok(views.html.product_index(products))
     }
@@ -37,7 +38,7 @@ class ProductController @Inject() (
 
     def details(id: Long) = Action { implicit request =>
         Logger.info("details called. id: " + id)
-        val product = service.findById(id).get
+        val product = Awaits.get(5, service.findById(id)).get
         Ok(views.html.product_details(Some(id), productForm.fill(product)))
     }
 
@@ -74,11 +75,11 @@ class ProductController @Inject() (
     }
 
     def remove(id: Long) = Action {
-        service.findById(id).map { product =>
+        import play.api.libs.concurrent.Execution.Implicits.defaultContext
+        val result = Awaits.get(5, service.findById(id))
+        result.map { product =>
             service.remove(id)
-            Redirect(routes.ProductController.index).flashing(
-                "success" -> Messages("success.delete", product.name)
-            )
+            Redirect(routes.ProductController.index).flashing("success" -> Messages("success.delete", product.name))
         }.getOrElse(NotFound)
     }
 }

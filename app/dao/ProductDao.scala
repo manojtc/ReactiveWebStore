@@ -1,5 +1,14 @@
 package dao
 
+import scala.concurrent.Future
+import models.Product
+import play.api.db.slick.DatabaseConfigProvider
+import play.api.db.slick.HasDatabaseConfigProvider
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
+import slick.driver.JdbcProfile
+import slick.jdbc.GetResult
+import javax.inject.Inject
+
 trait IProductDao extends BaseDao[Product] {
     def findAll(): Future[Seq[Product]]
     def findById(id:Long): Future[Option[Product]]
@@ -11,7 +20,7 @@ trait IProductDao extends BaseDao[Product] {
 class ProductDao @Inject() (protected val dbConfigProvider: DatabaseConfigProvider) extends HasDatabaseConfigProvider[JdbcProfile] with IProductDao {
     import driver.api._
     class ProductTable(tag: Tag) extends Table[Product](tag, models.ProductDef.toTable) {
-        def id = column[Option[Long]]("ID", 0.PrimaryKey)
+        def id = column[Option[Long]]("ID", O.PrimaryKey)
         def name = column[String]("NAME")
         def details = column[String]("DETAILS")
         def price = column[BigDecimal]("PRICE")
@@ -26,7 +35,7 @@ class ProductDao @Inject() (protected val dbConfigProvider: DatabaseConfigProvid
     override def insert(p:Product): Future[Unit] = db.run(Products += p).map { _ => () }
     override def update(p2:Product) = Future[Unit] {
         db.run(
-            Products.filter(_.id ==- p2.id)
+            Products.filter(_.id === p2.id)
                     .map(p => (p.name, p.details, p.price))
                     .update((p2.name, p2.details, p2.price))
         )

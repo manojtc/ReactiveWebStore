@@ -1,52 +1,41 @@
 package services
 
-import javax.inject._
+import javax.inject.Inject
+import javax.inject.Singleton
 import models.Review
-import scala.collection.mutable.HashMap
-import java.util.concurrent.atomic.AtomicLong
+import dao.ReviewDao
+import dao.IReviewDao
+import scala.concurrent.Future
+import utils.Awaits
 
 trait IReviewService extends BaseService[Review] {
-    def insert(review: Review): Long
-    def update(id: Long, review: Review): Boolean
-    def remove(id: Long): Boolean
-    def findById(id: Long): Option[Review]
-    def findAll(): Option[List[Review]]
+    def insert(review:Review): Future[Unit]
+    def update(id:Long, review:Review): Future[Unit]
+    def remove(id:Long): Future[Int]
+    def findById(id:Long): Future[Option[Review]]
+    def findAll(): Future[Option[Seq[Review]]]
 }
 
 @Singleton
-class ReviewService extends IReviewService {
-
-    def insert(review: Review): Long = {
-        val id = idCounter.incrementAndGet();
-        review.id = Some(id)
-        inMemoryDB.put(id, review)
-        id
+class ReviewService @Inject() (dao:IReviewDao) extends IReviewService {
+    import play.api.libs.concurrent.Execution.Implicits.defaultContext
+    def insert(review:Review): Future[Unit] = { dao.insert(review) }
+    def update(id:Long, review:Review): Future[Unit] = {
+        review.id = Option(id.toInt)
+        dao.update(review)
     }
-
-    def update(id: Long, review: Review): Boolean = {
-        validateId(id)
-        review.id = Some(id)
-        inMemoryDB.put(id, review)
-        true
+    def remove(id:Long): Future[Int] = {
+        dao.remove(id)
     }
-
-    def remove(id: Long): Boolean = {
-        validateId(id)
-        inMemoryDB.remove(id)
-        true
+    def findById(id:Long): Future[Option[Review]] = {
+        dao.findById(id)
     }
-
-    def findById(id: Long): Option[Review] = {
-        inMemoryDB.get(id)
+    def findAll(): Future[Option[Seq[Review]]] = {
+        dao.findAll().map { x => Option(x) }
     }
-
-    def findAll():Option[List[Review]] = {
-        if(inMemoryDB.values.toList == null || inMemoryDB.values.toList.size == 0) return None
-        Some(inMemoryDB.values.toList)
-    }
-
-    private def validateId(id: Long): Unit = {
-        val entry = inMemoryDB.get(id)
-        if(entry == null || entry.equals(None)) throw new RuntimeException("Could not find review: " + id)
+    private def validateId(id:Long): Unit = {
+        val future = findById(id)
+        val entry = Awaits.get(5, future)
+        if(entry == null || entry.equals(None)) throw new RuntimeException("Could not find Review: " + id)
     }
 }

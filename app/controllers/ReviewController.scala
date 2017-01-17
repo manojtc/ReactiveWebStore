@@ -9,6 +9,7 @@ import play.api.data.Forms._
 import play.api.i18n._
 import models._
 import services._
+import utils.Awaits
 
 @Singleton
 class ReviewController @Inject() (
@@ -26,7 +27,7 @@ class ReviewController @Inject() (
     )
 
     def index = Action { implicit request =>
-        val reviews = service.findAll().getOrElse(Seq())
+        val reviews = Awaits.get(5, service.findAll()).getOrElse(Seq())
         Logger.info("index called. Reviews: " + reviews)
         Ok(views.html.review_index(reviews))
     }
@@ -38,7 +39,7 @@ class ReviewController @Inject() (
 
     def details(id: Long) = Action { implicit request =>
         Logger.info("details called. id: " + id)
-        val review = service.findById(id).get
+        val review = Awaits.get(5, service.findById(id)).get
         Ok(views.html.review_details(Some(id),reviewForm.fill(review), productService.findAllProducts))
     }
 
@@ -83,11 +84,11 @@ class ReviewController @Inject() (
     }
 
     def remove(id: Long) = Action {
-        service.findById(id).map { review =>
+        import play.api.libs.concurrent.Execution.Implicits.defaultContext
+        val result = Awaits.get(5, service.findById(id))
+        result.map { review =>
             service.remove(id)
-            Redirect(routes.ReviewController.index).flashing(
-                "success" -> Messages("success.delete", review.productId)
-            )
+            Redirect(routes.ReviewController.index).flashing("success" -> Messages("success.delete", review.productId))
         }.getOrElse(NotFound)
     }
 }

@@ -13,8 +13,11 @@ libraryDependencies ++= Seq(
   "com.netflix.rxjava" % "rxjava-scala" % "0.20.7",
   "com.typesafe.play" %% "play-slick" % "2.0.0",
   "com.typesafe.play" %% "play-slick-evolutions" % "2.0.0",
-  "mysql" % "mysql-connector-java" % "6.0.3"
+  "mysql" % "mysql-connector-java" % "6.0.3",
+  "com.typesafe.akka" %% "akka-testkit" % "2.4.4" % Test
 )
 
 resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
 resolvers += DefaultMavenRepository
+
+testOptions in Test += Tests.Argument("-oIC")
